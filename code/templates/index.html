@@ -67,8 +67,12 @@
         text-security: disc; /* standard */
         
     } 
-
+    #config-form-container {  
+        display: block;  
+    } 
     </style>  
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>  
+    <script src="https://cdn.jsdelivr.net/npm/showdown@1.9.1/dist/showdown.min.js"></script>  
 </head>  
 <body>  
     <div class="flex-container">  
@@ -90,34 +94,33 @@
             <div id="loading" style="display: none;">Loading...</div>  <!-- Loading Indicator -->  
         </div>  
         <div id="config-section">  
-            <h2>Configuration</h2>  
-            <form id="config-form" onsubmit="event.preventDefault(); onSubmit();">  
-                <label for="engine">Engine:</label>  
-                <select id="engine">  
-                    <option value="turbo-35">turbo-35</option>  
-                    <option value="gpt-4">gpt-4</option>  
-                    <option value="gpt-4-32k" selected>gpt-4-32k</option>  
-                </select>  
-                <br> 
-                <br> 
-                <!-- <label for="api_key">API Key:</label>  
-                <input type="password"  id="api_key" >   -->
-                <label for="temperature">Temperature:</label>  
-                <input type="number" step="0.01" min="0" max="1" id="temperature" value="0.7">  
-                <label for="max_tokens">Max Tokens:</label>  
-                <input type="number" id="max_tokens" value="800">  
-                <label for="top_p">Top P:</label>  
-                <input type="number" step="0.01" min="0" max="1" id="top_p" value="0.95">  
-                <label for="frequency_penalty">Frequency Penalty:</label>  
-                <input type="number" step="0.01" min="0" max="1" id="frequency_penalty" value="0">  
-                <label for="presence_penalty">Presence Penalty:</label>  
-                <input type="number" step="0.01" min="0" max="1" id="presence_penalty" value="0">  
-                
-            </form>   
+            <h2 id="config-title" style="cursor:pointer;">Configuration</h2>  
+            <div id="config-form-container"> 
+                <form id="config-form" onsubmit="event.preventDefault()">  
+                    <label for="engine">Engine:</label>  
+                    <select id="engine">  
+                        <option value="turbo-35">turbo-35</option>  
+                        <option value="gpt-4">gpt-4</option>  
+                        <option value="gpt-4-32k" selected>gpt-4-32k</option>  
+                    </select>  
+                    <br> 
+                    <br> 
+                    <label for="temperature">Temperature:</label>  
+                    <input type="number" step="0.01" min="0" max="1" id="temperature" value="0.7">  
+                    <label for="max_tokens">Max Tokens:</label>  
+                    <input type="number" id="max_tokens" value="800">  
+                    <label for="top_p">Top P:</label>  
+                    <input type="number" step="0.01" min="0" max="1" id="top_p" value="0.95">  
+                    <label for="frequency_penalty">Frequency Penalty:</label>  
+                    <input type="number" step="0.01" min="0" max="1" id="frequency_penalty" value="0">  
+                    <label for="presence_penalty">Presence Penalty:</label>  
+                    <input type="number" step="0.01" min="0" max="1" id="presence_penalty" value="0">  
+                </form>   
+            </div>
         </div>  
     </div>  
   
-    <script>  
+    <script >  
         const chatbox = document.getElementById('chatbox');  
         const chatForm = document.getElementById('chat-form');  
         const messageInput = document.getElementById('message-input');  
@@ -137,6 +140,11 @@
         chatbox.innerHTML = '';  
         chatbox.appendChild(systemMessage);   
 });  
+        $(document).ready(function(){  
+        $("#config-title").click(function(){  
+            $("#config-form-container").toggle();  
+        });  
+        });   
         async function sendMessage(message) {  
     try {  
         // Show loading indicator and disable Send button  
@@ -149,11 +157,9 @@
         const top_p = parseFloat(document.getElementById('top_p').value);  
         const frequency_penalty = parseFloat(document.getElementById('frequency_penalty').value);  
         const presence_penalty = parseFloat(document.getElementById('presence_penalty').value);  
-        // const api_key = document.getElementById('api_key').value;  
         // Create request body  
         const requestBody = {  
             message,  
-            // api_key,
             chat_history: chatHistory,
             engine,  
             temperature,  
@@ -172,7 +178,6 @@
         });  
         const data = await response.text();  
         const botMessage = data;  
-  
         // Hide loading indicator and enable Send button  
         document.getElementById('loading').style.display = 'none';  
         document.getElementById('chat-form').querySelector('button').disabled = false;  
@@ -192,8 +197,12 @@
             const messageContainer = document.createElement('div');  
             messageContainer.classList.add('chatbox', role + '-message');  
             const messageContent = document.createElement('p');  
-            messageContent.textContent = content;  
-           
+            if (role === 'assistant') {  
+                let converter = new showdown.Converter();  
+                messageContent.innerHTML = converter.makeHtml(content);  
+            } else {  
+                messageContent.textContent = content;  
+            }  
             console.log(`Created message element:`, messageContent);  // Add this line  
             messageContainer.appendChild(messageContent);  
             chatbox.appendChild(messageContainer);  
@@ -201,11 +210,11 @@
             console.log(`Chatbox after adding message:`, chatbox);  // Add this line         
         }  
         messageInput.addEventListener('keydown', function(e) {  
-    // Check if Ctrl is pressed and then check if Enter is pressed  
-    if (e.ctrlKey && (e.key === 'Enter' || e.keyCode === 13)) {  
-        e.preventDefault(); // Prevent the default action   
-        chatForm.dispatchEvent(new Event('submit')); // Trigger the form submit event  
-    }  
+        //Check if Ctrl is pressed and then check if Enter is pressed  
+        if (e.ctrlKey && (e.key === 'Enter' || e.keyCode === 13)) {  
+            e.preventDefault(); // Prevent the default action   
+            chatForm.dispatchEvent(new Event('submit')); // Trigger the form submit event  
+        }  
 });  
     </script>  
 </body>  
