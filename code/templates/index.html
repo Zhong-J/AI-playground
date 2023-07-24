@@ -105,8 +105,25 @@ $(document).ready(function() {
     const chatbox = document.getElementById('chatbox');  
     const chatForm = document.getElementById('chat-form');  
     const messageInput = document.getElementById('message-input');  
-    let chatHistory = [{"role": "system", "content": "You are a helpful assistant."}];  
-  
+    let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [{"role": "system", "content": "You are a helpful assistant."}]; 
+    // Display the chat history on page load  
+    chatHistory.forEach(msg => {  
+        const messageContainer = document.createElement('div');    
+        messageContainer.classList.add(msg.role + '-message');  // apply different classes for user and assistant    
+        const messageContent = document.createElement('p');    
+        let converter = new showdown.Converter();  
+        if (msg.role === 'assistant') {    
+          messageContent.innerHTML = `<strong>Assistant:</strong> ${converter.makeHtml(msg.content)}`;    
+          messageContainer.appendChild(messageContent);    
+          chatbox.appendChild(messageContainer);  
+        } 
+        if (msg.role === 'user') {    
+          messageContent.innerHTML = `<strong>You:</strong> ${msg.content}`;   
+          messageContainer.appendChild(messageContent);    
+         chatbox.appendChild(messageContainer);   
+        }       
+    });
+
     chatForm.addEventListener('submit', async (e) => {  
         e.preventDefault();  
         const message = messageInput.value;  
@@ -120,6 +137,7 @@ $(document).ready(function() {
         let systemMessage = document.querySelector('.bot-message').cloneNode(true);  
         chatbox.innerHTML = '';  
         chatbox.appendChild(systemMessage);  
+        localStorage.removeItem('chatHistory');
     });  
 
     document.getElementById("toggleConfigButton").addEventListener("click", function() {    
@@ -167,6 +185,7 @@ $(document).ready(function() {
             document.getElementById('chat-form').querySelector('button').disabled = false;  
             if (data && data.message) {  
                 addMessage('assistant', data.message);  
+                localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
             } else {  
                 console.error('Invalid response:', data);  
             }  
