@@ -9,7 +9,12 @@ app = Flask(__name__)
 openai.api_type = "azure"
 openai.api_base = "https://pmopenai.openai.azure.com/"
 openai.api_version = "2023-03-15-preview"
-  
+api_key = os.getenv("API_KEY")
+if api_key is None:  
+    print("Environment variable not found")  
+else:  
+    print(f"Environment variable value: {api_key}")  
+openai.api_key = api_key  
 @app.route('/')  
 def home():  
     return render_template('index.html')  
@@ -25,8 +30,6 @@ def chat():
     top_p = data['top_p']  
     frequency_penalty = data['frequency_penalty']  
     presence_penalty = data['presence_penalty']  
-    # openai.api_key = "dd8bb64b846849358916574a709719b5" 
-    openai.api_key = data["api_key"]
     response = openai.ChatCompletion.create(  
         engine=engine,  
         messages=chat_history,
@@ -41,4 +44,4 @@ def chat():
     return response['choices'][0]['message']['content']
   
 if __name__ == '__main__':  
-    app.run(host='0.0.0.0', port=8000)  
+    app.run(host='0.0.0.0', port=8000)   
