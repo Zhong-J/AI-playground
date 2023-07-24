@@ -1,0 +1,205 @@
+<!DOCTYPE html>  
+<html>  
+<head>  
+    <title>OpenAI Playground</title>  
+    <style>  
+        body {  
+            font-family: Arial, sans-serif;  
+            margin: 0;  
+            padding: 20px;  
+            display: flex;  
+            flex-direction: column; 
+        }  
+  
+        h1 {  
+            text-align: center;  
+        }  
+  
+        #chatbox {  
+             flex-grow: 1;  
+             overflow-y: auto;  
+             padding: 10px;  
+             border-right: 1px solid #ccc; 
+        }  
+  
+        .user-message {  
+            background-color: #e2f0fd;  
+        }  
+  
+        .bot-message {  
+            background-color: #f0f0f0;  
+        }  
+        .assistant-message {  
+            background-color: #f0f0f0;  
+        } 
+        #message-input {    
+        width: 100%;  
+        min-height: 100px;  
+    }  
+        .flex-container {  
+            display: flex;  
+            justify-content: space-between;  
+            height: 90vh; // 90% of the viewport height  
+            margin-top: 10px; // Push the container down a bit 
+        }  
+        #chat-section {  
+            flex: 3;    
+            display: flex;  
+            flex-direction: column;   
+        }  
+        
+        #config-section {  
+            flex: 1;    
+            padding: 10px;  
+        }  
+        
+        #config-section form input {  
+            width: 100%;  
+            margin-bottom: 10px;  
+        }  
+        #input-section {  
+        padding: 10px;  
+    } 
+
+    </style>  
+</head>  
+<body>  
+    <div class="flex-container">  
+        <div id="chat-section">  
+            <h1>Chat with AI</h1>  
+            <!-- Chat messages will be appended here -->  
+            <div  id="chatbox">    
+                <div class="bot-message">    
+                    <p>Welcome! How can I assist you today?</p>    
+                </div>    
+            </div>   
+            <div id="input-section"> 
+                <form id="chat-form" action="/chat" method="POST">  
+                    <textarea id="message-input" name="message" placeholder="Type your message..." required></textarea>  
+                    <button type="submit">Send</button>  
+                    <button id="clear-history">Clear History</button>  
+                </form> 
+            </div>
+            <div id="loading" style="display: none;">Loading...</div>  <!-- Loading Indicator -->  
+        </div>  
+        <div id="config-section">  
+            <h2>Configuration</h2>  
+            <form id="config-form" onsubmit="event.preventDefault(); onSubmit();">  
+                <label for="engine">Engine:</label>  
+                <select id="engine">  
+                    <option value="turbo-35">turbo-35</option>  
+                    <option value="gpt-4">gpt-4</option>  
+                    <option value="gpt-4-32k" selected>gpt-4-32k</option>  
+                </select>  
+                <br> 
+                <br> 
+                <label for="api_key">API Key:</label>  
+                <input type="text"  id="api_key">  
+                <label for="temperature">Temperature:</label>  
+                <input type="number" step="0.01" min="0" max="1" id="temperature" value="0.7">  
+                <label for="max_tokens">Max Tokens:</label>  
+                <input type="number" id="max_tokens" value="800">  
+                <label for="top_p">Top P:</label>  
+                <input type="number" step="0.01" min="0" max="1" id="top_p" value="0.95">  
+                <label for="frequency_penalty">Frequency Penalty:</label>  
+                <input type="number" step="0.01" min="0" max="1" id="frequency_penalty" value="0">  
+                <label for="presence_penalty">Presence Penalty:</label>  
+                <input type="number" step="0.01" min="0" max="1" id="presence_penalty" value="0">  
+                
+            </form>   
+        </div>  
+    </div>  
+  
+    <script>  
+        const chatbox = document.getElementById('chatbox');  
+        const chatForm = document.getElementById('chat-form');  
+        const messageInput = document.getElementById('message-input');  
+        let chatHistory = [{"role": "system", "content": "You are a helpful assistant."}];  
+        chatForm.addEventListener('submit', async (e) => {  
+            e.preventDefault();  
+            const message = messageInput.value;  
+            addMessage('user', message);  
+            messageInput.value = '';  
+            await sendMessage(message);  
+        });   
+        document.getElementById('clear-history').addEventListener('click', function() {  
+        // Clear the chat history array  
+        chatHistory = [{"role": "system", "content": "You are a helpful assistant."}];  
+        // Save the hardcoded system message and clear the chat box in the UI  
+        let systemMessage = document.querySelector('.bot-message').cloneNode(true);  
+        chatbox.innerHTML = '';  
+        chatbox.appendChild(systemMessage);   
+});  
+        async function sendMessage(message) {  
+    try {  
+        // Show loading indicator and disable Send button  
+        document.getElementById('loading').style.display = 'block';  
+        document.getElementById('chat-form').querySelector('button').disabled = true;  
+        // Get parameter values from the form  
+        const engine = document.getElementById('engine').value;  
+        const temperature = parseFloat(document.getElementById('temperature').value);  
+        const max_tokens = parseInt(document.getElementById('max_tokens').value);  
+        const top_p = parseFloat(document.getElementById('top_p').value);  
+        const frequency_penalty = parseFloat(document.getElementById('frequency_penalty').value);  
+        const presence_penalty = parseFloat(document.getElementById('presence_penalty').value);  
+        const api_key = document.getElementById('api_key').value;  
+        // Create request body  
+        const requestBody = {  
+            message,  
+            api_key,
+            chat_history: chatHistory,
+            engine,  
+            temperature,  
+            max_tokens,  
+            top_p,  
+            frequency_penalty,  
+            presence_penalty  
+        }; 
+        console.log(`Request body:`, requestBody);  // Add this line
+        const response = await fetch('/chat', {  
+            method: 'POST',  
+            headers: {  
+                'Content-Type': 'application/json',  
+            },  
+            body: JSON.stringify(requestBody),  
+        });  
+        const data = await response.text();  
+        const botMessage = data;  
+  
+        // Hide loading indicator and enable Send button  
+        document.getElementById('loading').style.display = 'none';  
+        document.getElementById('chat-form').querySelector('button').disabled = false;  
+  
+        if (data && typeof data === 'string') {  
+            addMessage('assistant', botMessage);  
+        } else {  
+            console.error('Invalid response:', data);  
+        }  
+    } catch (error) {  
+        console.error('Error:', error);  
+    }  
+}    
+        function addMessage(role, content) {  
+            console.log(`Adding message: role=${role}, content=${content}`); 
+            chatHistory.push({role, content});
+            const messageContainer = document.createElement('div');  
+            messageContainer.classList.add('chatbox', role + '-message');  
+            const messageContent = document.createElement('p');  
+            messageContent.textContent = content;  
+           
+            console.log(`Created message element:`, messageContent);  // Add this line  
+            messageContainer.appendChild(messageContent);  
+            chatbox.appendChild(messageContainer);  
+            chatbox.scrollTop = chatbox.scrollHeight;  
+            console.log(`Chatbox after adding message:`, chatbox);  // Add this line         
+        }  
+        messageInput.addEventListener('keydown', function(e) {  
+    // Check if Ctrl is pressed and then check if Enter is pressed  
+    if (e.ctrlKey && (e.key === 'Enter' || e.keyCode === 13)) {  
+        e.preventDefault(); // Prevent the default action   
+        chatForm.dispatchEvent(new Event('submit')); // Trigger the form submit event  
+    }  
+});  
+    </script>  
+</body>  
+</html>  
