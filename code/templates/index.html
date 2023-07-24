@@ -202,10 +202,10 @@
         }  
         messageInput.addEventListener('keydown', function(e) {  
     // Check if Ctrl is pressed and then check if Enter is pressed  
-    // if (e.ctrlKey && (e.key === 'Enter' || e.keyCode === 13)) {  
-    //     e.preventDefault(); // Prevent the default action   
-    //     chatForm.dispatchEvent(new Event('submit')); // Trigger the form submit event  
-    // }  
+    if (e.ctrlKey && (e.key === 'Enter' || e.keyCode === 13)) {  
+        e.preventDefault(); // Prevent the default action   
+        chatForm.dispatchEvent(new Event('submit')); // Trigger the form submit event  
+    }  
 });  
     </script>  
 </body>  
