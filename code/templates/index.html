@@ -2,219 +2,206 @@
 <html>  
 <head>  
     <title>OpenAI Playground</title>  
-    <style>  
-        body {  
-            font-family: Arial, sans-serif;  
-            margin: 0;  
-            padding: 20px;  
-            display: flex;  
-            flex-direction: column; 
-        }  
-  
-        h1 {  
-            text-align: center;  
-        }  
-  
-        #chatbox {  
-             flex-grow: 1;  
-             overflow-y: auto;  
-             padding: 10px;  
-             border-right: 1px solid #ccc; 
-        }  
-  
-        .user-message {  
-            background-color: #e2f0fd;  
-        }  
-  
-        .bot-message {  
-            background-color: #f0f0f0;  
-        }  
-        .assistant-message {  
-            background-color: #f0f0f0;  
-        } 
-        #message-input {    
-        width: 100%;  
-        min-height: 100px;  
-    }  
-        .flex-container {  
-            display: flex;  
-            justify-content: space-between;  
-            height: 90vh; // 90% of the viewport height  
-            margin-top: 10px; // Push the container down a bit 
-        }  
-        #chat-section {  
-            flex: 3;    
-            display: flex;  
-            flex-direction: column;   
-        }  
-        
-        #config-section {  
-            flex: 1;    
-            padding: 10px;  
-        }  
-        
-        #config-section form input {  
-            width: 100%;  
-            margin-bottom: 10px;  
-        }  
-        #input-section {  
-        padding: 10px;  }
-        
-        #password {
-        -webkit-text-security: disc; /* Safari */
-        -moz-text-security: disc; /* Firefox */
-        -ms-text-security: disc; /* Internet Explorer/Edge */
-        text-security: disc; /* standard */
-        
-    } 
-    #config-form-container {  
-        display: block;  
-    } 
-    </style>  
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">  
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>  
     <script src="https://cdn.jsdelivr.net/npm/showdown@1.9.1/dist/showdown.min.js"></script>  
+<style>
+    .user-message {  
+    background-color: #e2f0fd;  
+    border-radius: 10px;  
+    margin: 10px 0;  
+    padding: 10px;  
+}  
+  
+.assistant-message {  
+    background-color: #f0f0f0;  
+    border-radius: 10px;  
+    margin: 10px 0;  
+    padding: 10px;  
+}  
+#config-section {  
+    position: fixed;  
+    top: 0;  
+    right: 0;  
+    z-index: 999;  
+    height: 100vh;  
+    overflow-y: auto;  
+}  
+  
+</style>
 </head>  
 <body>  
-    <div class="flex-container">  
-        <div id="chat-section">  
-            <h1>Chat with AI</h1>  
-            <!-- Chat messages will be appended here -->  
-            <div  id="chatbox">    
-                <div class="bot-message">    
-                    <p>Welcome! How can I assist you today?</p>    
-                </div>    
+    <div class="container py-5">  
+        <h1 class="text-center">Chat with AI</h1>  
+        <div class="row">  
+            <div class="col-md-8">  
+                <div class="card">  
+                    <div class="card-body" id="chatbox">  
+                        <div class="bot-message">  
+                            <p>Welcome! How can I assist you today?</p>  
+                        </div>  
+                    </div>  
+                    <div class="card-footer">  
+                        <form id="chat-form" action="/chat" method="POST">  
+                            <div class="input-group">  
+                                <textarea id="message-input" name="message" class="form-control" placeholder="Type your message..." required></textarea>  
+                                <div class="input-group-append">  
+                                    <button id="sendButton" class="btn btn-primary" type="submit">Send</button>  
+                                    <button id="clear-history" class="btn btn-secondary">Clear History</button>  
+                                </div>  
+                            </div>  
+                        </form>  
+                    </div>  
+                </div>  
+                <div id="loading" class="text-center my-3" style="display: none;">Loading...</div>  
             </div>   
-            <div id="input-section"> 
-                <form id="chat-form" action="/chat" method="POST">  
-                    <textarea id="message-input" name="message" placeholder="Type your message..." required></textarea>  
-                    <button type="submit">Send</button>  
-                    <button id="clear-history">Clear History</button>  
-                </form> 
-            </div>
-            <div id="loading" style="display: none;">Loading...</div>  <!-- Loading Indicator -->  
-        </div>  
-        <div id="config-section">  
-            <h2 id="config-title" style="cursor:pointer;">Configuration</h2>  
-            <div id="config-form-container"> 
-                <form id="config-form" onsubmit="event.preventDefault()">  
-                    <label for="engine">Engine:</label>  
-                    <select id="engine">  
-                        <option value="turbo-35">turbo-35</option>  
-                        <option value="gpt-4">gpt-4</option>  
-                        <option value="gpt-4-32k" selected>gpt-4-32k</option>  
-                    </select>  
-                    <br> 
-                    <br> 
-                    <label for="temperature">Temperature:</label>  
-                    <input type="number" step="0.01" min="0" max="1" id="temperature" value="0.7">  
-                    <label for="max_tokens">Max Tokens:</label>  
-                    <input type="number" id="max_tokens" value="800">  
-                    <label for="top_p">Top P:</label>  
-                    <input type="number" step="0.01" min="0" max="1" id="top_p" value="0.95">  
-                    <label for="frequency_penalty">Frequency Penalty:</label>  
-                    <input type="number" step="0.01" min="0" max="1" id="frequency_penalty" value="0">  
-                    <label for="presence_penalty">Presence Penalty:</label>  
-                    <input type="number" step="0.01" min="0" max="1" id="presence_penalty" value="0">  
-                </form>   
-            </div>
+            <div id="config-section" class="col-md-4">     
+                <div class="card">    
+                    <div class="card-header">  
+                        <button id="toggleConfigButton" class="btn btn-primary">Hide Configuration</button>  
+                    </div>    
+                    <div id="config-body" class="card-body">   
+                        <form id="config-form" onsubmit="event.preventDefault()">    
+                            <div class="form-group">    
+                                <label for="engine">Engine:</label>    
+                                <select id="engine" class="form-control">    
+                                    <option value="turbo-35">turbo-35</option>    
+                                    <option value="gpt-4">gpt-4</option>    
+                                    <option value="gpt-4-32k" selected>gpt-4-32k</option>    
+                                </select>    
+                            </div>
+                        <div class="form-group">  
+                            <label for="temperature">Temperature:</label>  
+                            <input type="number" step="0.01" min="0" max="1" id="temperature" value="0.7" class="form-control">  
+                        </div>  
+                        <div class="form-group">  
+                            <label for="max_tokens">Max Tokens:</label>  
+                            <input type="number" id="max_tokens" value="800" class="form-control">  
+                        </div>  
+                        <div class="form-group">  
+                            <label for="top_p">Top P:</label>  
+                            <input type="number" step="0.01" min="0" max="1" id="top_p" value="0.95" class="form-control">  
+                        </div>  
+                        <div class="form-group">  
+                            <label for="frequency_penalty">Frequency Penalty:</label>  
+                            <input type="number" step="0.01" min="0" max="1" id="frequency_penalty" value="0" class="form-control">  
+                        </div>  
+                        <div class="form-group">  
+                            <label for="presence_penalty">Presence Penalty:</label>  
+                            <input type="number" step="0.01" min="0" max="1" id="presence_penalty" value="0" class="form-control">  
+                        </div> 
+                        <div class="form-group">  
+                            <label for="last_x_messages">Include Last X Messages:</label>  
+                            <input type="number" min="2" max="30" id="last_x_messages" value="8" class="form-control">  
+                        </div> 
+                    </form>  
+                    </div>
+                </div>  
+            </div>  
         </div>  
     </div>  
-  
     <script >  
-        const chatbox = document.getElementById('chatbox');  
-        const chatForm = document.getElementById('chat-form');  
-        const messageInput = document.getElementById('message-input');  
-        let chatHistory = [{"role": "system", "content": "You are a helpful assistant."}];  
-        chatForm.addEventListener('submit', async (e) => {  
-            e.preventDefault();  
-            const message = messageInput.value;  
-            addMessage('user', message);  
-            messageInput.value = '';  
-            await sendMessage(message);  
-        });   
-        document.getElementById('clear-history').addEventListener('click', function() {  
-        // Clear the chat history array  
+$(document).ready(function() {  
+    const chatbox = document.getElementById('chatbox');  
+    const chatForm = document.getElementById('chat-form');  
+    const messageInput = document.getElementById('message-input');  
+    let chatHistory = [{"role": "system", "content": "You are a helpful assistant."}];  
+  
+    chatForm.addEventListener('submit', async (e) => {  
+        e.preventDefault();  
+        const message = messageInput.value;  
+        addMessage('user', message);  
+        messageInput.value = '';  
+        await sendMessage(message);  
+    });  
+  
+    document.getElementById('clear-history').addEventListener('click', function() {  
         chatHistory = [{"role": "system", "content": "You are a helpful assistant."}];  
-        // Save the hardcoded system message and clear the chat box in the UI  
         let systemMessage = document.querySelector('.bot-message').cloneNode(true);  
         chatbox.innerHTML = '';  
-        chatbox.appendChild(systemMessage);   
-});  
-        $(document).ready(function(){  
-        $("#config-title").click(function(){  
-            $("#config-form-container").toggle();  
-        });  
-        });   
-        async function sendMessage(message) {  
-    try {  
-        // Show loading indicator and disable Send button  
-        document.getElementById('loading').style.display = 'block';  
-        document.getElementById('chat-form').querySelector('button').disabled = true;  
-        // Get parameter values from the form  
-        const engine = document.getElementById('engine').value;  
-        const temperature = parseFloat(document.getElementById('temperature').value);  
-        const max_tokens = parseInt(document.getElementById('max_tokens').value);  
-        const top_p = parseFloat(document.getElementById('top_p').value);  
-        const frequency_penalty = parseFloat(document.getElementById('frequency_penalty').value);  
-        const presence_penalty = parseFloat(document.getElementById('presence_penalty').value);  
-        // Create request body  
-        const requestBody = {  
-            message,  
-            chat_history: chatHistory,
-            engine,  
-            temperature,  
-            max_tokens,  
-            top_p,  
-            frequency_penalty,  
-            presence_penalty  
-        }; 
-        console.log(`Request body:`, requestBody);  // Add this line
-        const response = await fetch('/chat', {  
-            method: 'POST',  
-            headers: {  
-                'Content-Type': 'application/json',  
-            },  
-            body: JSON.stringify(requestBody),  
-        });  
-        const data = await response.text();  
-        const botMessage = data;  
-        // Hide loading indicator and enable Send button  
-        document.getElementById('loading').style.display = 'none';  
-        document.getElementById('chat-form').querySelector('button').disabled = false;  
-  
-        if (data && typeof data === 'string') {  
-            addMessage('assistant', botMessage);  
-        } else {  
-            console.error('Invalid response:', data);  
-        }  
-    } catch (error) {  
-        console.error('Error:', error);  
-    }  
-}    
-        function addMessage(role, content) {  
-            console.log(`Adding message: role=${role}, content=${content}`); 
-            chatHistory.push({role, content});
-            const messageContainer = document.createElement('div');  
-            messageContainer.classList.add('chatbox', role + '-message');  
-            const messageContent = document.createElement('p');  
-            if (role === 'assistant') {  
-                let converter = new showdown.Converter();  
-                messageContent.innerHTML = converter.makeHtml(content);  
+        chatbox.appendChild(systemMessage);  
+    });  
+
+    document.getElementById("toggleConfigButton").addEventListener("click", function() {    
+        var configBody = document.getElementById("config-body");    
+        var toggleButton = document.getElementById("toggleConfigButton");  
+        if (configBody.style.display === "none") {    
+            configBody.style.display = "block";    
+            toggleButton.innerText = "Hide Configuration";  
+        } else {    
+            configBody.style.display = "none";  
+            toggleButton.innerText = "Show Configuration";  
+        }    
+    });   
+
+    async function sendMessage(message) {  
+        try {  
+            document.getElementById('loading').style.display = 'block';  
+            document.getElementById('chat-form').querySelector('button').disabled = true;  
+            const engine = document.getElementById('engine').value;  
+            const temperature = parseFloat(document.getElementById('temperature').value);  
+            const max_tokens = parseInt(document.getElementById('max_tokens').value);  
+            const top_p = parseFloat(document.getElementById('top_p').value);  
+            const frequency_penalty = parseFloat(document.getElementById('frequency_penalty').value);  
+            const presence_penalty = parseFloat(document.getElementById('presence_penalty').value);  
+            const requestBody = {  
+                message,  
+                chat_history: chatHistory,  
+                engine,  
+                temperature,  
+                max_tokens,  
+                top_p,  
+                frequency_penalty,  
+                presence_penalty  
+            };  
+            const response = await fetch('/chat', {  
+                method: 'POST',  
+                headers: {  
+                    'Content-Type': 'application/json',  
+                },  
+                body: JSON.stringify(requestBody),  
+            });  
+            const data = await response.json(); 
+            console.log(requestBody) 
+            document.getElementById('loading').style.display = 'none';  
+            document.getElementById('chat-form').querySelector('button').disabled = false;  
+            if (data && data.message) {  
+                addMessage('assistant', data.message);  
             } else {  
-                messageContent.textContent = content;  
+                console.error('Invalid response:', data);  
             }  
-            console.log(`Created message element:`, messageContent);  // Add this line  
-            messageContainer.appendChild(messageContent);  
-            chatbox.appendChild(messageContainer);  
-            chatbox.scrollTop = chatbox.scrollHeight;  
-            console.log(`Chatbox after adding message:`, chatbox);  // Add this line         
+        } catch (error) {  
+            console.error('Error:', error);  
         }  
-        messageInput.addEventListener('keydown', function(e) {  
-        //Check if Ctrl is pressed and then check if Enter is pressed  
-        if (e.ctrlKey && (e.key === 'Enter' || e.keyCode === 13)) {  
-            e.preventDefault(); // Prevent the default action   
-            chatForm.dispatchEvent(new Event('submit')); // Trigger the form submit event  
+    }  
+  
+    function addMessage(role, content) {  
+        chatHistory.push({role, content});  
+        const last_x_messages = parseInt(document.getElementById('last_x_messages').value);
+        if (chatHistory.length > last_x_messages) {
+            chatHistory.splice(1,1);
+        }
+        const messageContainer = document.createElement('div');  
+        messageContainer.classList.add(role + '-message');  // apply different classes for user and assistant  
+        const messageContent = document.createElement('p');  
+        let converter = new showdown.Converter();
+        if (role === 'assistant') {  
+          messageContent.innerHTML = `<strong>Assistant:</strong> ${converter.makeHtml(content)}`;  
+      } else {  
+          messageContent.innerHTML = `<strong>You:</strong> ${content}`;  
+      }    
+        messageContainer.appendChild(messageContent);  
+        chatbox.appendChild(messageContainer);  
+        chatbox.scrollTop = chatbox.scrollHeight;  
+    }  
+  
+    messageInput.addEventListener('keydown', function(e) {  
+        const sendButton = document.getElementById('chat-form').querySelector('button');  
+        if (e.ctrlKey && (e.key === 'Enter' || e.keyCode === 13) && sendButton.disabled == false) {  
+            e.preventDefault();  
+            chatForm.dispatchEvent(new Event('submit'));  
         }  
+    });  
 });  
     </script>  
 </body>  

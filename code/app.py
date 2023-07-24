@@ -1,7 +1,6 @@
-from flask import Flask, render_template, request 
+from flask import Flask, render_template, request, jsonify  
 import openai  
-import os
-from flask import session  
+import os  
 
 app = Flask(__name__)  
   
@@ -41,7 +40,8 @@ def chat():
         stop=None  
     )  
     print(response['choices'][0]['message']['content'])
-    return response['choices'][0]['message']['content']
-  
+    return jsonify({  
+    'message': response['choices'][0]['message']['content']  
+})   
 if __name__ == '__main__':  
     app.run(host='0.0.0.0', port=8000)   
