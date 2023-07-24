@@ -58,7 +58,14 @@
             margin-bottom: 10px;  
         }  
         #input-section {  
-        padding: 10px;  
+        padding: 10px;  }
+        
+        #password {
+        -webkit-text-security: disc; /* Safari */
+        -moz-text-security: disc; /* Firefox */
+        -ms-text-security: disc; /* Internet Explorer/Edge */
+        text-security: disc; /* standard */
+        
     } 
 
     </style>  
@@ -93,8 +100,8 @@
                 </select>  
                 <br> 
                 <br> 
-                <label for="api_key">API Key:</label>  
-                <input type="text"  id="api_key">  
+                <!-- <label for="api_key">API Key:</label>  
+                <input type="password"  id="api_key" >   -->
                 <label for="temperature">Temperature:</label>  
                 <input type="number" step="0.01" min="0" max="1" id="temperature" value="0.7">  
                 <label for="max_tokens">Max Tokens:</label>  
@@ -142,11 +149,11 @@
         const top_p = parseFloat(document.getElementById('top_p').value);  
         const frequency_penalty = parseFloat(document.getElementById('frequency_penalty').value);  
         const presence_penalty = parseFloat(document.getElementById('presence_penalty').value);  
-        const api_key = document.getElementById('api_key').value;  
+        // const api_key = document.getElementById('api_key').value;  
         // Create request body  
         const requestBody = {  
             message,  
-            api_key,
+            // api_key,
             chat_history: chatHistory,
             engine,  
             temperature,  
@@ -195,10 +202,10 @@
         }  
         messageInput.addEventListener('keydown', function(e) {  
     // Check if Ctrl is pressed and then check if Enter is pressed  
-    if (e.ctrlKey && (e.key === 'Enter' || e.keyCode === 13)) {  
-        e.preventDefault(); // Prevent the default action   
-        chatForm.dispatchEvent(new Event('submit')); // Trigger the form submit event  
-    }  
+    // if (e.ctrlKey && (e.key === 'Enter' || e.keyCode === 13)) {  
+    //     e.preventDefault(); // Prevent the default action   
+    //     chatForm.dispatchEvent(new Event('submit')); // Trigger the form submit event  
+    // }  
 });  
     </script>  
 </body>  
