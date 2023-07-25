@@ -105,7 +105,8 @@ $(document).ready(function() {
     const chatbox = document.getElementById('chatbox');  
     const chatForm = document.getElementById('chat-form');  
     const messageInput = document.getElementById('message-input');  
-    let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [{"role": "system", "content": "You are a helpful assistant."}]; 
+    // let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [{"role": "system", "content": "You are a helpful assistant."}]; 
+    let chatHistory = [{"role": "system", "content": "You are a helpful assistant."}]; 
     // Display the chat history on page load  
     chatHistory.forEach(msg => {  
         const messageContainer = document.createElement('div');    
@@ -118,7 +119,7 @@ $(document).ready(function() {
           chatbox.appendChild(messageContainer);  
         } 
         if (msg.role === 'user') {    
-          messageContent.innerHTML = `<strong>You:</strong> ${msg.content}`;   
+          messageContent.innerHTML = msg.content;   
           messageContainer.appendChild(messageContent);    
          chatbox.appendChild(messageContainer);   
         }       
@@ -137,7 +138,7 @@ $(document).ready(function() {
         let systemMessage = document.querySelector('.bot-message').cloneNode(true);  
         chatbox.innerHTML = '';  
         chatbox.appendChild(systemMessage);  
-        localStorage.removeItem('chatHistory');
+        // localStorage.removeItem('chatHistory');
     });  
 
     document.getElementById("toggleConfigButton").addEventListener("click", function() {    
@@ -185,7 +186,7 @@ $(document).ready(function() {
             document.getElementById('chat-form').querySelector('button').disabled = false;  
             if (data) {  
                 addMessage('assistant', data);  
-                localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+                // localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
             } else {  
                 console.error('Invalid response:', data);  
             }  
@@ -207,7 +208,7 @@ $(document).ready(function() {
         if (role === 'assistant') {  
           messageContent.innerHTML = `<strong>Assistant:</strong> ${converter.makeHtml(content)}`;  
       } else {  
-          messageContent.innerHTML = `<strong>You:</strong> ${content}`;  
+          messageContent.textContent = content;  
       }    
         messageContainer.appendChild(messageContent);  
         chatbox.appendChild(messageContainer);  
