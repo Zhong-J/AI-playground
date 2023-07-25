@@ -8,6 +8,7 @@
     />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/showdown@1.9.1/dist/showdown.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
       .user-message {
         background-color: #e2f0fd;
@@ -15,7 +16,16 @@
         margin: 10px 0;
         padding: 10px;
       }
-
+      .copy-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+        color: #000;
+    }
+    .user-message, .assistant-message {
+      position: relative; 
+  }
       .assistant-message {
         background-color: #f0f0f0;
         border-radius: 10px;
@@ -180,20 +190,32 @@
           messageContainer.classList.add(msg.role + "-message"); // apply different classes for user and assistant
           const messageContent = document.createElement("p");
           let converter = new showdown.Converter();
-          if (msg.role === "assistant") {
-            messageContent.innerHTML = `<strong>Assistant:</strong> ${converter.makeHtml(
-              msg.content
-            )}`;
-            messageContainer.appendChild(messageContent);
-            chatbox.appendChild(messageContainer);
-          }
-          if (msg.role === "user") {
-            messageContent.innerHTML = msg.content;
-            messageContainer.appendChild(messageContent);
-            chatbox.appendChild(messageContainer);
+          const copyButton = document.createElement("i");
+          copyButton.classList.add("fas", "fa-copy", "copy-button");
+          copyButton.onclick = function() {
+              let tempElement = document.createElement("textarea");
+              tempElement.value = content;
+              document.body.appendChild(tempElement);
+              tempElement.select();
+              document.execCommand("Copy");
+              tempElement.remove();
+          };
+          if (msg.role === "assistant" || msg.role === "user")
+          {
+            if (msg.role === "assistant") {
+              messageContent.innerHTML = `<strong>Assistant:</strong> ${converter.makeHtml(
+                msg.content
+              )}`;
+            }
+            if (msg.role === "user") {
+              messageContent.textContent = msg.content;
+            }
+          messageContainer.appendChild(messageContent);
+          messageContainer.appendChild(copyButton);
+          chatbox.appendChild(messageContainer);
           }
         });
-
+ 
         chatForm.addEventListener("submit", async (e) => {
           e.preventDefault();
           const message = messageInput.value;
@@ -291,7 +313,7 @@
           const last_x_messages = parseInt(
             document.getElementById("last_x_messages").value
           );
-          if (chatHistory.length > last_x_messages) {
+          if (chatHistory.length > last_x_messages+1) {
             chatHistory.splice(1, 1);
           }
           const messageContainer = document.createElement("div");
@@ -305,7 +327,22 @@
           } else {
             messageContent.textContent = content;
           }
+
+          // create the copy button
+          const copyButton = document.createElement("i");
+          copyButton.classList.add("fas", "fa-copy", "copy-button");
+          copyButton.onclick = function() {
+              let tempElement = document.createElement("textarea");
+              tempElement.value = content;
+              document.body.appendChild(tempElement);
+              tempElement.select();
+              document.execCommand("Copy");
+              tempElement.remove();
+          };
+
+          // Append the message and the copy button to the message container
           messageContainer.appendChild(messageContent);
+          messageContainer.appendChild(copyButton);          
           chatbox.appendChild(messageContainer);
           chatbox.scrollTop = chatbox.scrollHeight;
         }
