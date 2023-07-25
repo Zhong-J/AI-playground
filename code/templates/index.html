@@ -21,7 +21,7 @@
         top: 10px;
         right: 10px;
         cursor: pointer;
-        color: #000;
+        color: #5765ef;
     }
     .user-message, .assistant-message {
       position: relative; 
@@ -32,13 +32,15 @@
         margin: 10px 0;
         padding: 10px;
       }
-      #config-section {
-        position: fixed;
+      #config-col {
+        transition: all 0.5s;
+        position: sticky;
+        top: 50px;
+      }
+      .sticky-button {
+        position: sticky;
         top: 0;
-        right: 0;
-        z-index: 999;
-        height: 100vh;
-        overflow-y: auto;
+        z-index: 100;
       }
     </style>
   </head>
@@ -46,7 +48,7 @@
     <div class="container py-5">
       <h1 class="text-center">Chat with AI</h1>
       <div class="row">
-        <div class="col-md-8">
+        <div class="col-md-8" id="chat-col">
           <div class="card">
             <div class="card-body" id="chatbox">
               <div class="bot-message">
@@ -83,96 +85,57 @@
             Loading...
           </div>
         </div>
-        <div id="config-section" class="col-md-4">
-          <div class="card">
-            <div class="card-header">
-              <button id="toggleConfigButton" class="btn btn-primary">
-                Hide Configuration
-              </button>
+        <div class="col-md-4">
+            <div class="sticky-button">
+                <button id="toggleConfigButton" class="btn btn-primary">
+                    Hide Configuration
+                </button>
             </div>
-            <div id="config-body" class="card-body">
-              <form id="config-form" onsubmit="event.preventDefault()">
-                <div class="form-group">
-                  <label for="secret_code">Secret Code</label>
-                  <input type="password" id="secret_code" class="form-control" />
-                </div>
-                <div class="form-group">
-                  <label for="engine">Engine:</label>
-                  <select id="engine" class="form-control">
-                    <option value="turbo-35">turbo-35</option>
-                    <option value="gpt-4">gpt-4</option>
-                    <option value="gpt-4-32k" selected>gpt-4-32k</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="temperature">Temperature:</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="1"
-                    id="temperature"
-                    value="0.7"
-                    class="form-control"
-                  />
-                </div>
-                <div class="form-group">
-                  <label for="max_tokens">Max Tokens:</label>
-                  <input
-                    type="number"
-                    id="max_tokens"
-                    value="800"
-                    class="form-control"
-                  />
-                </div>
-                <div class="form-group">
-                  <label for="top_p">Top P:</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="1"
-                    id="top_p"
-                    value="0.95"
-                    class="form-control"
-                  />
-                </div>
-                <div class="form-group">
-                  <label for="frequency_penalty">Frequency Penalty:</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="1"
-                    id="frequency_penalty"
-                    value="0"
-                    class="form-control"
-                  />
-                </div>
-                <div class="form-group">
-                  <label for="presence_penalty">Presence Penalty:</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="1"
-                    id="presence_penalty"
-                    value="0"
-                    class="form-control"
-                  />
-                </div>
-                <div class="form-group">
-                  <label for="last_x_messages">Include Last X Messages:</label>
-                  <input
-                    type="number"
-                    min="2"
-                    max="30"
-                    id="last_x_messages"
-                    value="8"
-                    class="form-control"
-                  />
-                </div>
-              </form>
+        <div id="config-col">
+            <div class="card">
+                <div class="card-body" id="config-body">
+                    <form id="config-form" onsubmit="event.preventDefault()">
+                        <div class="form-group">
+                            <label for="secret_code">Secret Code</label>
+                            <input type="password" id="secret_code" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label for="engine">Engine:</label>
+                            <select id="engine" class="form-control">
+                                <option value="turbo-35">turbo-35</option>
+                                <option value="gpt-4">gpt-4</option>
+                                <option value="gpt-4-32k" selected>gpt-4-32k</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="temperature">Temperature:</label>
+                            <input type="number" step="0.01" min="0" max="1" id="temperature" value="0.7"
+                                class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label for="max_tokens">Max Tokens:</label>
+                            <input type="number" id="max_tokens" value="800" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label for="top_p">Top P:</label>
+                            <input type="number" step="0.01" min="0" max="1" id="top_p" value="0.95" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label for="frequency_penalty">Frequency Penalty:</label>
+                            <input type="number" step="0.01" min="0" max="1" id="frequency_penalty" value="0"
+                                class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label for="presence_penalty">Presence Penalty:</label>
+                            <input type="number" step="0.01" min="0" max="1" id="presence_penalty" value="0"
+                                class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label for="last_x_messages">Include Last X Messages:</label>
+                            <input type="number" min="2" max="30" id="last_x_messages" value="8" class="form-control" />
+                        </div>
+                    </form>
+            </div>
             </div>
           </div>
         </div>
@@ -239,16 +202,19 @@
             localStorage.removeItem('chatHistory');
           });
 
-        document
+          document
           .getElementById("toggleConfigButton")
           .addEventListener("click", function () {
-            var configBody = document.getElementById("config-body");
+            var conf              cument.getElementById("config-col");
+                      chatCol = document.getElementById("chat-col");
             var toggleButton = document.getElementById("toggleConfigButton");
-            if (configBody.style.display === "none") {
-              configBody.style.display = "block";
+            if (configCol.style.display === "none" || configCol.style.di              ) {
+              configCol.style.display = "block";
+              chatCol.                  ol-md-8";
               toggleButton.innerText = "Hide Configuration";
             } else {
-              configBody.style.display = "none";
+              configCol.style.display = "none";
+              chatCol.c                l-md-12";
               toggleButton.innerText = "Show Configuration";
             }
           });
