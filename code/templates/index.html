@@ -194,7 +194,7 @@
           copyButton.classList.add("fas", "fa-copy", "copy-button");
           copyButton.onclick = function() {
               let tempElement = document.createElement("textarea");
-              tempElement.value = content;
+              tempElement.value = msg.content;
               document.body.appendChild(tempElement);
               tempElement.select();
               document.execCommand("Copy");
@@ -213,6 +213,7 @@
           messageContainer.appendChild(messageContent);
           messageContainer.appendChild(copyButton);
           chatbox.appendChild(messageContainer);
+          chatbox.scrollTop = chatbox.scrollHeight;
           }
         });
  
@@ -306,6 +307,7 @@
           } catch (error) {
             console.error("Error:", error);
           }
+          messageInput.focus();
         }
 
         function addMessage(role, content) {
@@ -345,6 +347,7 @@
           messageContainer.appendChild(copyButton);          
           chatbox.appendChild(messageContainer);
           chatbox.scrollTop = chatbox.scrollHeight;
+          messageInput.scrollIntoView({ behavior: 'instant' });
         }
 
         messageInput.addEventListener("keydown", function (e) {
