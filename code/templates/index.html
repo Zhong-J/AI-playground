@@ -199,6 +199,7 @@
         const messageInput = document.getElementById("message-input");
         const system_message = document.getElementById("system_message").value;
         let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [{"role": "system", "content": system_message}];
+        document.getElementById("system_message").value = chatHistory[0].content;
         // Display the chat history on page load
         chatHistory.forEach((msg) => {
           const messageContainer = document.createElement("div");
@@ -270,7 +271,10 @@
               toggleButton.innerText = "Show Configuration";
             }
           });
-
+          document.getElementById("system_message").addEventListener("change", function() {
+            chatHistory[0].content = this.value;
+            localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+        });
         async function sendMessage(message) {
           try {
             document.getElementById("loading").style.display = "block";
