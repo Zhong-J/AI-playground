@@ -9,6 +9,7 @@ openai.api_type = "azure"
 openai.api_base = "https://pmopenai.openai.azure.com/"
 openai.api_version = "2023-03-15-preview"
 api_key = os.getenv("API_KEY")
+secret_code = os.getenv("SECRET_CODE")
 if api_key is None:
     print("Environment variable not found")
 else:
@@ -32,9 +33,8 @@ def chat():
     top_p = data['top_p']
     frequency_penalty = data['frequency_penalty']
     presence_penalty = data['presence_penalty']
-    secret_code = data['secret_code']
-    print(secret_code)
-    if secret_code != "dorisyyds":
+    input_secret_code = data['secret_code']
+    if secret_code != input_secret_code:
         return ("error: Invalid secret code")
     response = openai.ChatCompletion.create(
         engine=engine,
