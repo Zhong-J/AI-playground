@@ -22,10 +22,10 @@
         right: 10px;
         cursor: pointer;
         color: #5765ef;
-    }
-    .user-message, .assistant-message {
-      position: relative; 
-  }
+      }
+      .user-message, .assistant-message {
+        position: relative;
+      }
       .assistant-message {
         background-color: #f0f0f0;
         border-radius: 10px;
@@ -42,6 +42,12 @@
         top: 0;
         z-index: 100;
       }
+      .session-item {
+        cursor: pointer;
+      }
+      .session-item:hover {
+        background-color: #f0f0f0;
+      }
     </style>
   </head>
   <body>
@@ -51,9 +57,6 @@
         <div class="col-md-8" id="chat-col">
           <div class="card">
             <div class="card-body" id="chatbox">
-              <div class="bot-message">
-                <p>Welcome! How can I assist you today?</p>
-              </div>
             </div>
             <div class="card-footer">
               <form id="chat-form" action="/chat" method="POST">
@@ -64,16 +67,18 @@
                     class="form-control"
                     placeholder="Type your message..."
                     required
+                    disabled
                   ></textarea>
                   <div class="input-group-append">
                     <button
                       id="sendButton"
                       class="btn btn-primary"
                       type="submit"
+                      disabled
                     >
                       Send
                     </button>
-                    <button id="clear-history" class="btn btn-secondary">
+                    <button id="clear-history" class="btn btn-secondary" disabled>
                       Clear History
                     </button>
                   </div>
@@ -86,18 +91,35 @@
           </div>
         </div>
         <div class="col-md-4">
-            <div class="sticky-button">
-                <button id="toggleConfigButton" class="btn btn-primary">
-                  Hide Configuration
-                </button>
-            </div>
+          <div class="sticky-button">
+            <button id="toggleConfigButton" class="btn btn-primary">
+              Hide Configuration
+            </button>
+            <button id="newSessionButton" class="btn btn-secondary">
+              New Session
+            </button>
+          </div>
+          <div id="session-list" style="margin-bottom: 10px;">
+            <h5>Sessions:</h5>
+            <ul class="list-group"></ul>
+          </div>
           <div id="config-col">
             <div class="card">
               <div class="card-body" id="config-body">
                 <form id="config-form" onsubmit="event.preventDefault()">
                   <div class="form-group">
+                    <label for="session_name">Session Name:</label>
+                    <input type="text" id="session_name" class="form-control" />
+                    <button id="renameSessionButton" class="btn btn-secondary mt-2">
+                      Rename Session
+                    </button>
+                    <button id="deleteSessionButton" class="btn btn-danger mt-2">
+                      Delete Session
+                    </button>
+                  </div>
+                  <div class="form-group">
                     <label for="system_message">System Message:</label>
-                      <textarea 
+                    <textarea 
                       id="system_message"
                       rows="4" 
                       cols="50" 
@@ -197,11 +219,33 @@
         const chatbox = document.getElementById("chatbox");
         const chatForm = document.getElementById("chat-form");
         const messageInput = document.getElementById("message-input");
-        const system_message = document.getElementById("system_message").value;
-        let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [{"role": "system", "content": system_message}];
-        document.getElementById("system_message").value = chatHistory[0].content;
+        const sessionList = document.getElementById("session-list").querySelector(".list-group");
+        const newSessionButton = document.getElementById("newSessionButton");
+        const renameSessionButton = document.getElementById("renameSessionButton");
+        const deleteSessionButton = document.getElementById("deleteSessionButton");
+        const clearHistoryButton = document.getElementById("clear-history");
+        const sendButton = document.getElementById("sendButton");
+        let sessions = JSON.parse(localStorage.getItem('sessions')) || {};
+        let currentSession = null;
+        // Initialize the session list and select the first session if exists
+        initializeSessionList();
+        if (Object.keys(sessions).length > 0) {
+          switchSession(Object.keys(sessions)[0]);
+        }
         // Display the chat history on page load
-        chatHistory.forEach((msg) => {
+        function displayChatHistory(chatHistory) {
+          chatbox.innerHTML = '';
+          const botMessage = document.createElement('div');
+          botMessage.classList.add('bot-message');
+          const botMessageContent = document.createElement('p');
+          botMessageContent.textContent = 'Welcome! How can I assist you today?';
+          botMessage.appendChild(botMessageContent);
+          chatbox.appendChild(botMessage);
+          chatHistory.forEach((msg) => {
+            displayMessage(msg);
+          });
+        }
+        function displayMessage(msg) {
           const messageContainer = document.createElement("div");
           messageContainer.classList.add(msg.role + "-message"); // apply different classes for user and assistant
           const messageContent = document.createElement("p");
@@ -209,12 +253,12 @@
           const copyButton = document.createElement("i");
           copyButton.classList.add("fas", "fa-copy", "copy-button");
           copyButton.onclick = function() {
-              let tempElement = document.createElement("textarea");
-              tempElement.value = msg.content;
-              document.body.appendChild(tempElement);
-              tempElement.select();
-              document.execCommand("Copy");
-              tempElement.remove();
+            let tempElement = document.createElement("textarea");
+            tempElement.value = msg.content;
+            document.body.appendChild(tempElement);
+            tempElement.select();
+            document.execCommand("Copy");
+            tempElement.remove();
           };
           if (msg.role === "assistant" || msg.role === "user")
           {
@@ -231,31 +275,23 @@
           chatbox.appendChild(messageContainer);
           chatbox.scrollTop = chatbox.scrollHeight;
           }
-        });
- 
+        }
         chatForm.addEventListener("submit", async (e) => {
           e.preventDefault();
           const message = messageInput.value;
           addMessage("user", message);
           messageInput.value = "";
-          await sendMessage(message);
+          await sendMessage(currentSession, message);
         });
-
-        document
-          .getElementById("clear-history")
+        clearHistoryButton
           .addEventListener("click", function () {
-            chatHistory = [
-              { role: "system", content: system_message},
+            sessions[currentSession].chatHistory = [
+              { role: "system", content: getSystemMessage()},
             ];
-            let systemMessage = document
-              .querySelector(".bot-message")
-              .cloneNode(true);
-            chatbox.innerHTML = "";
-            chatbox.appendChild(systemMessage);
-            localStorage.removeItem('chatHistory');
+            displayChatHistory(sessions[currentSession].chatHistory);
+            localStorage.setItem('sessions', JSON.stringify(sessions));
           });
-
-          document
+        document
           .getElementById("toggleConfigButton")
           .addEventListener("click", function () {
             var configCol = document.getElementById("config-col");
@@ -271,37 +307,27 @@
               toggleButton.innerText = "Show Configuration";
             }
           });
-          document.getElementById("system_message").addEventListener("change", function() {
-            chatHistory[0].content = this.value;
-            localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+        document.getElementById("system_message").addEventListener("change", function() {
+          sessions[currentSession].system_message = this.value;
+          localStorage.setItem('sessions', JSON.stringify(sessions));
         });
-        async function sendMessage(message) {
+        async function sendMessage(sessionName, message) {
           try {
             document.getElementById("loading").style.display = "block";
-            document
-              .getElementById("chat-form")
-              .querySelector("button").disabled = true;
-            const engine = document.getElementById("engine").value;
-            const temperature = parseFloat(
-              document.getElementById("temperature").value
-            );
-            const max_tokens = parseInt(
-              document.getElementById("max_tokens").value
-            );
-            const top_p = parseFloat(document.getElementById("top_p").value);
-            const frequency_penalty = parseFloat(
-              document.getElementById("frequency_penalty").value
-            );
-            const presence_penalty = parseFloat(
-              document.getElementById("presence_penalty").value
-            );
-            const secret_code = document.getElementById("secret_code").value;
-            const system_message = document.getElementById("system_message").value;
-            chatHistory[0].content = system_message;
+            sendButton.disabled = true;
+            const engine = getEngine();
+            const temperature = getTemperature();
+            const max_tokens = getMaxTokens();
+            const top_p = getTopP();
+            const frequency_penalty = getFrequencyPenalty();
+            const presence_penalty = getPresencePenalty();
+            const secret_code = getSecretCode();
+            const system_message = getSystemMessage();
+            sessions[currentSession].system_message = system_message;
             const requestBody = {
               secret_code,
               message,
-              chat_history: chatHistory,
+              chat_history: sessions[currentSession].chatHistory,
               engine,
               temperature,
               max_tokens,
@@ -319,12 +345,10 @@
             const data = await response.text();
             console.log(requestBody);
             document.getElementById("loading").style.display = "none";
-            document
-              .getElementById("chat-form")
-              .querySelector("button").disabled = false;
-            if (data) {
+            sendButton.disabled = false;
+            if (data && currentSession === sessionName) {
               addMessage("assistant", data);
-              localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+              localStorage.setItem('sessions', JSON.stringify(sessions));
             } else {
               console.error("Invalid response:", data);
             }
@@ -333,47 +357,15 @@
           }
           messageInput.focus();
         }
-
         function addMessage(role, content) {
-          chatHistory.push({ role, content });
-          const last_x_messages = parseInt(
-            document.getElementById("last_x_messages").value
-          );
-          if (chatHistory.length > last_x_messages+1) {
-            chatHistory.splice(1, 1);
+          sessions[currentSession].chatHistory.push({ role, content });
+          const last_x_messages = getLastXMessages();
+          if (sessions[currentSession].chatHistory.length > last_x_messages+1) {
+            sessions[currentSession].chatHistory.splice(1, 1);
           }
-          const messageContainer = document.createElement("div");
-          messageContainer.classList.add(role + "-message"); // apply different classes for user and assistant
-          const messageContent = document.createElement("p");
-          let converter = new showdown.Converter();
-          if (role === "assistant") {
-            messageContent.innerHTML = `<strong>Assistant:</strong> ${converter.makeHtml(
-              content
-            )}`;
-          } else {
-            messageContent.textContent = content;
-          }
-
-          // create the copy button
-          const copyButton = document.createElement("i");
-          copyButton.classList.add("fas", "fa-copy", "copy-button");
-          copyButton.onclick = function() {
-              let tempElement = document.createElement("textarea");
-              tempElement.value = content;
-              document.body.appendChild(tempElement);
-              tempElement.select();
-              document.execCommand("Copy");
-              tempElement.remove();
-          };
-
-          // Append the message and the copy button to the message container
-          messageContainer.appendChild(messageContent);
-          messageContainer.appendChild(copyButton);          
-          chatbox.appendChild(messageContainer);
-          chatbox.scrollTop = chatbox.scrollHeight;
-          messageInput.scrollIntoView({ behavior: 'instant' });
+          displayMessage({role, content});
+          localStorage.setItem('sessions', JSON.stringify(sessions));
         }
-
         messageInput.addEventListener("keydown", function (e) {
           const sendButton = document
             .getElementById("chat-form")
@@ -387,7 +379,112 @@
             chatForm.dispatchEvent(new Event("submit"));
           }
         });
-      });
+        newSessionButton.addEventListener("click", function () {
+          const sessionName = prompt('Enter a name for the new session:');
+          if (sessionName) {
+            createSession(sessionName);
+          }
+        });
+        renameSessionButton.addEventListener("click", function () {
+          const sessionName = document.getElementById("session_name").value;
+          if (sessionName) {
+            renameSession(currentSession, sessionName);
+          }
+        });
+        deleteSessionButton.addEventListener("click", function () {
+          const confirmDeletion = confirm(`Are you sure you want to delete the session: ${currentSession}`);
+          if (confirmDeletion) {
+            deleteSession(currentSession);
+          }
+        });
+        function getSystemMessage() {
+          return document.getElementById("system_message").value;
+        }
+        function getSecretCode() {
+          return document.getElementById("secret_code").value;
+        }
+        function getEngine() {
+          return document.getElementById("engine").value;
+        }
+        function getTemperature() {
+          return parseFloat(document.getElementById("temperature").value);
+        }
+        function getMaxTokens() {
+          return parseInt(document.getElementById("max_tokens").value);
+        }
+        function getTopP() {
+          return parseFloat(document.getElementById("top_p").value);
+        }
+        function getFrequencyPenalty() {
+          return parseFloat(document.getElementById("frequency_penalty").value);
+        }
+        function getPresencePenalty() {
+          return parseFloat(document.getElementById("presence_penalty").value);
+        }
+        function getLastXMessages() {
+          return parseInt(document.getElementById("last_x_messages").value);
+        }
+        function initializeSessionList() {
+          sessionList.innerHTML = '';
+          for (let sessionName in sessions) {
+            let listItem = document.createElement('li');
+            listItem.classList.add('list-group-item', 'session-item');
+            listItem.textContent = sessionName;
+            listItem.addEventListener('click', function () {
+              switchSession(sessionName);
+            });
+            sessionList.appendChild(listItem);
+          }
+        }
+        function switchSession(sessionName) {
+          currentSession = sessionName;
+          document.getElementById("session_name").value = currentSession;
+          document.getElementById("system_message").value = sessions[currentSession].system_message;
+          displayChatHistory(sessions[currentSession].chatHistory);
+          toggleInputDisabled(false);
+        }
+        function createSession(sessionName) {
+          if (sessionName in sessions) {
+            alert('Session already exists!');
+            return;
+          }
+          sessions[sessionName] = {
+            system_message: "You are a help assistant!",
+            chatHistory: [],
+          };
+          localStorage.setItem('sessions', JSON.stringify(sessions));
+          initializeSessionList();
+          switchSession(sessionName);
+        }
+        function renameSession(oldName, newName) {
+          if (newName in sessions) {
+            alert('Session already exists!');
+            return;
+          }
+          sessions[newName] = sessions[oldName];
+          delete sessions[oldName];
+          localStorage.setItem('sessions', JSON.stringify(sessions));
+          initializeSessionList();
+          switchSession(newName);
+        }
+        function deleteSession(sessionName) {
+          delete sessions[sessionName];
+          localStorage.setItem('sessions', JSON.stringify(sessions));
+          initializeSessionList();
+          if (Object.keys(sessions).length > 0) {
+            switchSession(Object.keys(sessions)[0]);
+          } else {
+            currentSession = null;
+            chatbox.innerHTML = '';
+            toggleInputDisabled(true);
+          }
+        }
+        function toggleInputDisabled(disabled) {
+          messageInput.disabled = disabled;
+          sendButton.disabled = disabled;
+          clearHistoryButton.disabled = disabled;
+        }
+      });s
     </script>
   </body>
 </html>
