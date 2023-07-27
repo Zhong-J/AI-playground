@@ -34,8 +34,10 @@ def chat():
     frequency_penalty = data['frequency_penalty']
     presence_penalty = data['presence_penalty']
     input_secret_code = data['secret_code']
+    system_message = data["system_message"]
     if secret_code != input_secret_code:
         return ("error: Invalid secret code")
+    chat_history = [{"role":"system", "content":system_message}] + chat_history
     response = openai.ChatCompletion.create(
         engine=engine,
         messages=chat_history,

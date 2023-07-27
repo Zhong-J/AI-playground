@@ -327,6 +327,7 @@
             const requestBody = {
               secret_code,
               message,
+              system_message,
               chat_history: sessions[currentSession].chatHistory,
               engine,
               temperature,
@@ -360,7 +361,7 @@
         function addMessage(role, content) {
           sessions[currentSession].chatHistory.push({ role, content });
           const last_x_messages = getLastXMessages();
-          if (sessions[currentSession].chatHistory.length > last_x_messages+1) {
+          if (sessions[currentSession].chatHistory.length > last_x_messages) {
             sessions[currentSession].chatHistory.splice(1, 1);
           }
           displayMessage({role, content});
